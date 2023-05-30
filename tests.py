@@ -1,3 +1,4 @@
+import random
 import unittest
 from tree import Tree
 
@@ -23,7 +24,7 @@ class TestTree(unittest.TestCase):
             '| | ? c',
             '| ? a'
         ]))
-        self.assertTrue(TestTree.valid_nodes(tree))
+        self.assertTrue(TestTree.validate_nodes(tree))
 
     def test_trim(self):
         self.assertEqual(Tree.parse('(((aaa)))').formula, 'a')
@@ -39,15 +40,36 @@ class TestTree(unittest.TestCase):
         tree = Tree.parse('a(b+c)')
         copy = tree.clone()
         self.assertEqual(str(tree), str(copy))
-        self.assertTrue(TestTree.valid_nodes(copy))
+        self.assertTrue(TestTree.validate_nodes(copy))
+
+    def test_random(self):
+        for _ in range(10):
+            leaf_count = random.randint(1, 100)
+            max_degree = random.randint(2, 25)
+            tree = Tree.random(leaf_count, max_degree)
+            self.assertTrue(TestTree.validate_nodes(tree))
+            self.assertEqual(len(TestTree.collect_leaves(tree)), leaf_count)
 
     @staticmethod
-    def valid_nodes(node, parent=None):
+    def validate_nodes(node, parent=None):
         if node.gate == '?' and node.children:
             return False
         if node.parent != parent:
             return False
         for child in node.children:
-            if not TestTree.valid_nodes(child, node):
+            if not TestTree.validate_nodes(child, node):
                 return False
         return True
+
+    @staticmethod
+    def collect_leaves(node):
+        if node.children:
+            leaves = set()
+            for child in node.children:
+                leaves |= TestTree.collect_leaves(child)
+            return leaves
+        return {node.formula}
+
+    @staticmethod
+    def compute_max_degree(node):
+        return max([len(node.children)] + [TestTree.compute_max_degree(child) for child in node.children])

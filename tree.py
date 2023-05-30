@@ -1,3 +1,5 @@
+import random
+
 class Tree:
     """ Used for representing Abstract Syntax Trees for Boolean formulas.
     It stores the following data about the current node:
@@ -137,4 +139,35 @@ class Tree:
         return tree
 
     @staticmethod
-    def random(leaf_count, max_degree): pass
+    def random(leaf_count, max_degree):
+        """ Generates and returns a random AST having `leaf_count` leaves (variables in the corresponding formula)
+        such that no node in it has more than `max_degree` children.
+        The construction goes bottom-top, starting with the leaves, and it builds one level at a time.
+        If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) // 2` nodes.
+        This way, it is guaranteed that each node on the previous level will have a parent.
+        After assigning the parents for the previous level, it fills the reamining edges with clones of random existing nodes.
+        """
+
+        levels = [[Tree('?', chr(ord('a') + i) if i < 26 else 'x' + str(i - 25)) for i in range(leaf_count)]]
+        nodes = [*levels[0]]
+
+        while len(levels[-1]) > 1:
+            level_size = (len(levels[-1]) + 1) // 2
+            level_children = [[] for _ in range(level_size)]
+            for node in levels[-1]:
+                index = random.choice([index for index in range(level_size) if max_degree > len(level_children[index])])
+                level_children[index] += [node]
+
+            levels += [[]]
+            for index in range(level_size):
+                available_children = list(set(nodes) - set(level_children[index]))
+                available_max_degree = min(max_degree - len(level_children[index]), len(available_children))
+                new_children_count = 0 if available_max_degree == 0 else random.randint(1, available_max_degree)
+                level_children[index] += random.sample(available_children, new_children_count)
+                children = [child if child.parent is None else child.clone() for child in level_children[index]]
+                levels[-1] += [Tree(random.choice('*+'), children)]
+            nodes += levels[-1]
+
+        tree = nodes[-1]
+        tree.trim()
+        return tree
