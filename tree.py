@@ -56,7 +56,7 @@ class Tree:
         def update_children(child):
             nonlocal subformulas, new_children
             if child.formula not in subformulas:
-                subformulas.add(child.formula)
+                subformulas |= {child.formula}
                 new_children += [child]
 
         for child in self.children:

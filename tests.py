@@ -1,5 +1,6 @@
 import random
 import unittest
+import optimizer
 from tree import Tree
 
 class TestTree(unittest.TestCase):
@@ -73,3 +74,15 @@ class TestTree(unittest.TestCase):
     @staticmethod
     def compute_max_degree(node):
         return max([len(node.children)] + [TestTree.compute_max_degree(child) for child in node.children])
+
+    def test_find_factorizable_lists(self):
+        tree = Tree.parse('((a+b)*(a+c)*((x*y)+(x*z)+(x*t)))+(a*b*c)+((a+b)*((x*y)+(x*z)+(x*t)))')
+        lists = optimizer.find_factorizable_lists(tree)
+        answer = sorted([(nodes[0].formula, len(nodes)) for nodes in lists])
+        target = sorted([('x', 3), ('x', 3), ('((t*x)+(x*y)+(x*z))', 2), ('(a+b)', 2)])
+        self.assertListEqual(answer, target)
+
+    def test_apply_random_factorization(self):
+        tree = Tree.parse('xab+xc+d')
+        optimizer.apply_random_factorization(tree)
+        self.assertEqual(tree.formula, '((((a*b)+c)*x)+d)')
