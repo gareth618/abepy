@@ -26,10 +26,25 @@ def factorize(node1, node2):
     upper_node = Tree(lower_operator, [node1, lower_node])
     grandparent.reset(upper_operator, [upper_node] + children_grandparent)
 
-def apply_random_factorization(tree):
+def find_absorbable_nodes(tree):
+    nodes = sum([find_absorbable_nodes(child) for child in tree.children], [])
+    subformulas = set([child.formula for child in tree.children])
+    nodes += [child for child in tree.children if any(grandchild.formula in subformulas for grandchild in child.children)]
+    return nodes
+
+def absorb(node):
+    parent = node.parent
+    children_parent = list(set(parent.children) - {node})
+    parent.reset(parent.gate, children_parent)
+
+def increase_cost(tree):
     lists = find_factorizable_lists(tree)
-    if not lists: return False
-    nodes = random.choice(lists)
-    factorize(*random.sample(nodes, 2))
+    nodes = find_absorbable_nodes(tree)
+    if not lists and not nodes:
+        return False
+    if lists and (not nodes or random.random() < .5):
+        factorize(*random.sample(random.choice(lists), 2))
+    else:
+        absorb(random.choice(nodes))
     tree.trim()
     return True

@@ -81,10 +81,12 @@ class TestTree(unittest.TestCase):
 
     @staticmethod
     def check_invariants(node):
-        if len(node.children) == 1: return False
+        if len(node.children) == 1:
+            return False
         subformulas = set()
         for child in node.children:
-            if child.gate == node.gate: return False
+            if child.gate == node.gate:
+                return False
             subformulas |= {child.formula}
         return len(subformulas) == len(node.children)
 
@@ -95,10 +97,20 @@ class TestTree(unittest.TestCase):
         target = sorted([('a', 2), ('x', 3), ('x', 3), ('((t*x)+(x*y)+(x*z))', 2), ('(a+b)', 2)])
         self.assertListEqual(answer, target)
 
-    def test_apply_random_factorization(self):
+    def test_apply_factorization(self):
         tree = Tree.parse('(x*a*b)+(x*c)+d')
-        optimizer.apply_random_factorization(tree)
+        optimizer.increase_cost(tree)
         self.assertEqual(tree.formula, '((((a*b)+c)*x)+d)')
-        tree = Tree.parse('(x+a+b)*(x+c)*d')
-        optimizer.apply_random_factorization(tree)
-        self.assertEqual(tree.formula, '((((a+b)*c)+x)*d)')
+
+    def test_find_absorbable_nodes(self):
+        tree = Tree.parse('a+(a*b*(b+c))')
+        nodes = optimizer.find_absorbable_nodes(tree)
+        answer = sorted([node.formula for node in nodes])
+        target = sorted(['(b+c)', '((b+c)*a*b)'])
+        self.assertListEqual(answer, target)
+
+    def test_apply_absorption(self):
+        tree = Tree.parse('(a*b*(b+c)*(b+d))+d')
+        optimizer.increase_cost(tree)
+        optimizer.increase_cost(tree)
+        self.assertEqual(tree.formula, '((a*b)+d)')
