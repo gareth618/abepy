@@ -33,6 +33,14 @@ class TestTree(unittest.TestCase):
         self.assertEqual(Tree.parse('(a+b)+(b+c)').formula, '(a+b+c)')
         self.assertEqual(Tree.parse('(a+b)*(a+b)+a+(b+b)+(((c)))').formula, '(a+b+c)')
 
+    def test_trim_invariants(self):
+        for _ in range(10):
+            leaf_count = random.randint(1, 100)
+            max_degree = random.randint(2, 25)
+            tree = Tree.random(leaf_count, max_degree)
+            tree.trim()
+            self.assertTrue(TestTree.check_invariants(tree))
+
     def test_cost(self):
         self.assertEqual(Tree.parse('a').cost(), 1)
         self.assertEqual(Tree.parse('(ab+c)d+ad+c').cost(), 7)
@@ -72,8 +80,13 @@ class TestTree(unittest.TestCase):
         return {node.formula}
 
     @staticmethod
-    def compute_max_degree(node):
-        return max([len(node.children)] + [TestTree.compute_max_degree(child) for child in node.children])
+    def check_invariants(node):
+        if len(node.children) == 1: return False
+        subformulas = set()
+        for child in node.children:
+            if child.gate == node.gate: return False
+            subformulas |= {child.formula}
+        return len(subformulas) == len(node.children)
 
     def test_find_factorizable_lists(self):
         tree = Tree.parse('((a+b)*(a+c)*((x*y)+(x*z)+(x*t)))+(a*b*c)+((a+b)*((x*y)+(x*z)+(x*t)))')

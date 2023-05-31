@@ -141,11 +141,11 @@ class Tree:
     @staticmethod
     def random(leaf_count, max_degree):
         """ Generates and returns a random AST having `leaf_count` leaves (variables in the corresponding formula)
-        such that no node in it has more than `max_degree` children.
+        such that no node in it has more than `max_degree` children (before trimming).
         The construction goes bottom-top, starting with the leaves, and it builds one level at a time.
         If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) // 2` nodes.
         This way, it is guaranteed that each node on the previous level will have a parent.
-        After assigning the parents for the previous level, it fills the reamining edges with clones of random existing nodes.
+        After assigning the parents for the previous level, it fills the remaining edges with clones of random existing nodes.
         """
 
         levels = [[Tree('?', chr(ord('a') + i) if i < 26 else 'x' + str(i - 25)) for i in range(leaf_count)]]
@@ -155,7 +155,7 @@ class Tree:
             level_size = (len(levels[-1]) + 1) // 2
             level_children = [[] for _ in range(level_size)]
             for node in levels[-1]:
-                index = random.choice([index for index in range(level_size) if max_degree > len(level_children[index])])
+                index = random.choice([index for index in range(level_size) if len(level_children[index]) < max_degree])
                 level_children[index] += [node]
 
             levels += [[]]
