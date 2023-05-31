@@ -92,10 +92,13 @@ class TestTree(unittest.TestCase):
         tree = Tree.parse('((a+b)*(a+c)*((x*y)+(x*z)+(x*t)))+(a*b*c)+((a+b)*((x*y)+(x*z)+(x*t)))')
         lists = optimizer.find_factorizable_lists(tree)
         answer = sorted([(nodes[0].formula, len(nodes)) for nodes in lists])
-        target = sorted([('x', 3), ('x', 3), ('((t*x)+(x*y)+(x*z))', 2), ('(a+b)', 2)])
+        target = sorted([('a', 2), ('x', 3), ('x', 3), ('((t*x)+(x*y)+(x*z))', 2), ('(a+b)', 2)])
         self.assertListEqual(answer, target)
 
     def test_apply_random_factorization(self):
-        tree = Tree.parse('xab+xc+d')
+        tree = Tree.parse('(x*a*b)+(x*c)+d')
         optimizer.apply_random_factorization(tree)
         self.assertEqual(tree.formula, '((((a*b)+c)*x)+d)')
+        tree = Tree.parse('(x+a+b)*(x+c)*d')
+        optimizer.apply_random_factorization(tree)
+        self.assertEqual(tree.formula, '((((a+b)*c)+x)*d)')
