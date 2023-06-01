@@ -1,7 +1,7 @@
 import re
 import random
 import unittest
-import optimizer
+import operations
 from tree import Tree
 
 class TestTree(unittest.TestCase):
@@ -80,52 +80,52 @@ class TestTree(unittest.TestCase):
 
     def test_find_factorizable_lists(self):
         tree = Tree.parse('((a+b)*(a+c)*((x*y)+(x*z)+(x*t)))+(a*b*c)+((a+b)*((x*y)+(x*z)+(x*t)))')
-        lists = optimizer.find_factorizable_lists(tree)
+        lists = operations.find_factorizable_lists(tree)
         answer = sorted([(nodes[0].formula, len(nodes)) for nodes in lists])
         target = sorted([('a', 2), ('x', 3), ('x', 3), ('((t*x)+(x*y)+(x*z))', 2), ('(a+b)', 2)])
         self.assertListEqual(answer, target)
 
     def test_apply_factorization(self):
         tree = Tree.parse('(x*a*b*c)+(x*d*e)+(x*f)+g')
-        optimizer.factorize(optimizer.find_factorizable_lists(tree)[0])
+        operations.factorize(operations.find_factorizable_lists(tree)[0])
         tree.trim()
         self.assertEqual(tree.formula, '((((a*b*c)+(d*e)+f)*x)+g)')
 
     def test_find_absorbable_lists(self):
         tree = Tree.parse('a+(a*b*(b+c)*(b+d))')
-        lists = optimizer.find_absorbable_lists(tree)
+        lists = operations.find_absorbable_lists(tree)
         answer = sorted([[node.formula for node in nodes] for nodes in lists])
         target = sorted([['((b+c)*(b+d)*a*b)'], ['(b+c)', '(b+d)']])
         self.assertListEqual(answer, target)
 
     def test_apply_absorption(self):
         tree = Tree.parse('(a*b*(b+c)*(b+d))+d+(d*e)')
-        optimizer.absorb(optimizer.find_absorbable_lists(tree)[0])
+        operations.absorb(operations.find_absorbable_lists(tree)[0])
         tree.trim()
-        optimizer.absorb(optimizer.find_absorbable_lists(tree)[0])
+        operations.absorb(operations.find_absorbable_lists(tree)[0])
         tree.trim()
         self.assertEqual(tree.formula, '((a*b)+d)')
 
     def test_find_distributable_nodes(self):
         tree = Tree.parse('a*(b+c+((d+e)*(f+g)))*h')
-        nodes = optimizer.find_distributable_nodes(tree)
+        nodes = operations.find_distributable_nodes(tree)
         answer = sorted([node.formula for node in nodes])
         target = sorted(['(((d+e)*(f+g))+b+c)', '((d+e)*(f+g))', '(d+e)', '(f+g)'])
         self.assertListEqual(answer, target)
 
     def test_apply_distribution(self):
         tree = Tree.parse('a*(b+c+(d*e))*f')
-        nodes = optimizer.find_distributable_nodes(tree)
+        nodes = operations.find_distributable_nodes(tree)
         node = next(node for node in nodes if node.formula == '((d*e)+b+c)')
         sibling = next(sibling for sibling in node.parent.children if sibling.formula == 'a')
-        optimizer.distribute(sibling, node)
+        operations.distribute(sibling, node)
         tree.trim()
         self.assertEqual(tree.formula, '(((a*b)+(a*c)+(a*d*e))*f)')
 
     def test_decrease_cost(self):
         def test(tree):
             cost1 = tree.cost()
-            optimizer.decrease_cost(tree)
+            operations.decrease_cost(tree)
             cost2 = tree.cost()
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
@@ -135,11 +135,11 @@ class TestTree(unittest.TestCase):
     def test_increase_cost_v1(self):
         def test(tree):
             cost1 = tree.cost()
-            nodes = optimizer.find_distributable_nodes(tree)
+            nodes = operations.find_distributable_nodes(tree)
             if nodes:
                 node = random.choice(nodes)
                 sibling = random.choice(list(set(node.parent.children) - {node}))
-                optimizer.distribute(sibling, node)
+                operations.distribute(sibling, node)
             cost2 = tree.cost()
             self.assertGreaterEqual(cost2, cost1)
             tree.trim()
@@ -149,7 +149,7 @@ class TestTree(unittest.TestCase):
 
     def test_increase_cost_v2(self):
         def test(tree):
-            optimizer.increase_cost(tree)
+            operations.increase_cost(tree)
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
         TestTree.for_random_tree(test, 10)
