@@ -83,21 +83,24 @@ class TestTree(unittest.TestCase):
         self.assertListEqual(answer, target)
 
     def test_apply_factorization(self):
-        tree = Tree.parse('(x*a*b)+(x*c)+d')
-        optimizer.decrease_cost(tree)
-        self.assertEqual(tree.formula, '((((a*b)+c)*x)+d)')
+        tree = Tree.parse('(x*a*b*c)+(x*d*e)+(x*f)+g')
+        optimizer.factorize(optimizer.find_factorizable_lists(tree)[0])
+        tree.trim()
+        self.assertEqual(tree.formula, '((((a*b*c)+(d*e)+f)*x)+g)')
 
-    def test_find_absorbable_nodes(self):
-        tree = Tree.parse('a+(a*b*(b+c))')
-        nodes = optimizer.find_absorbable_nodes(tree)
-        answer = sorted([node.formula for node in nodes])
-        target = sorted(['(b+c)', '((b+c)*a*b)'])
+    def test_find_absorbable_lists(self):
+        tree = Tree.parse('a+(a*b*(b+c)*(b+d))')
+        lists = optimizer.find_absorbable_lists(tree)
+        answer = sorted([[node.formula for node in nodes] for nodes in lists])
+        target = sorted([['((b+c)*(b+d)*a*b)'], ['(b+c)', '(b+d)']])
         self.assertListEqual(answer, target)
 
     def test_apply_absorption(self):
-        tree = Tree.parse('(a*b*(b+c)*(b+d))+d')
-        optimizer.decrease_cost(tree)
-        optimizer.decrease_cost(tree)
+        tree = Tree.parse('(a*b*(b+c)*(b+d))+d+(d*e)')
+        optimizer.absorb(optimizer.find_absorbable_lists(tree)[0])
+        tree.trim()
+        optimizer.absorb(optimizer.find_absorbable_lists(tree)[0])
+        tree.trim()
         self.assertEqual(tree.formula, '((a*b)+d)')
 
     def test_decrease_cost(self):
