@@ -42,6 +42,8 @@ class Tree:
             self.formula = '(' + gate.join([child.formula for child in children]) + ')'
             for child in children:
                 child.parent = self
+        if self.parent is not None:
+            self.parent.reset(self.parent.gate, [*self.parent.children])
 
     def trim(self):
         """ Simplifies the tree by getting rid of the following three structural flaws:

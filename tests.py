@@ -1,3 +1,4 @@
+import re
 import random
 import unittest
 import optimizer
@@ -51,9 +52,11 @@ class TestTree(unittest.TestCase):
 
     @staticmethod
     def validate_nodes(node, parent=None):
-        if node.gate == '?' and node.children:
+        if node.parent is not parent:
             return False
-        if node.parent != parent:
+        if node.gate == '?' and (node.children or not re.match(r'[a-z]\d*$', node.formula)):
+            return False
+        if node.gate != '?' and (not node.children or node.formula != '(' + node.gate.join([child.formula for child in node.children]) + ')'):
             return False
         return all(TestTree.validate_nodes(child, node) for child in node.children)
 
@@ -103,6 +106,22 @@ class TestTree(unittest.TestCase):
         tree.trim()
         self.assertEqual(tree.formula, '((a*b)+d)')
 
+    def test_find_distributable_nodes(self):
+        tree = Tree.parse('a*(b+c+((d+e)*(f+g)))*h')
+        nodes = optimizer.find_distributable_nodes(tree)
+        answer = sorted([node.formula for node in nodes])
+        target = sorted(['(((d+e)*(f+g))+b+c)', '((d+e)*(f+g))', '(d+e)', '(f+g)'])
+        self.assertListEqual(answer, target)
+
+    def test_apply_distribution(self):
+        tree = Tree.parse('a*(b+c+(d*e))*f')
+        nodes = optimizer.find_distributable_nodes(tree)
+        node = next(node for node in nodes if node.formula == '((d*e)+b+c)')
+        sibling = next(sibling for sibling in node.parent.children if sibling.formula == 'a')
+        optimizer.distribute(sibling, node)
+        tree.trim()
+        self.assertEqual(tree.formula, '(((a*b)+(a*c)+(a*d*e))*f)')
+
     def test_decrease_cost(self):
         def test(tree):
             cost1 = tree.cost()
@@ -111,4 +130,26 @@ class TestTree(unittest.TestCase):
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
             self.assertLessEqual(cost2, cost1)
+        TestTree.for_random_tree(test, 10)
+
+    def test_increase_cost_v1(self):
+        def test(tree):
+            cost1 = tree.cost()
+            nodes = optimizer.find_distributable_nodes(tree)
+            if nodes:
+                node = random.choice(nodes)
+                sibling = random.choice(list(set(node.parent.children) - {node}))
+                optimizer.distribute(sibling, node)
+            cost2 = tree.cost()
+            self.assertGreaterEqual(cost2, cost1)
+            tree.trim()
+            self.assertTrue(TestTree.validate_nodes(tree))
+            self.assertTrue(TestTree.check_invariants(tree))
+        TestTree.for_random_tree(test, 10)
+
+    def test_increase_cost_v2(self):
+        def test(tree):
+            optimizer.increase_cost(tree)
+            self.assertTrue(TestTree.validate_nodes(tree))
+            self.assertTrue(TestTree.check_invariants(tree))
         TestTree.for_random_tree(test, 10)
