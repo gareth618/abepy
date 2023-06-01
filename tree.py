@@ -84,6 +84,13 @@ class Tree:
             return Tree(self.gate, self.formula)
         return Tree(self.gate, [child.clone() for child in self.children])
 
+    def evaluate(self, assignment):
+        if self.gate == '*':
+            return all(child.evaluate(assignment) for child in self.children)
+        if self.gate == '+':
+            return any(child.evaluate(assignment) for child in self.children)
+        return assignment[self.formula]
+
     @staticmethod
     def parse(string):
         """ Builds and returns the corresponding tree of the given formula.
