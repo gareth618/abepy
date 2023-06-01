@@ -139,18 +139,15 @@ class Tree:
         return tree
 
     @staticmethod
-    def random(leaf_count, max_degree):
-        """ Generates and returns a random AST having `leaf_count` leaves (variables in the corresponding formula)
-        such that no node in it has more than `max_degree` children (before trimming).
-        The construction goes bottom-top, starting with the leaves, and it builds one level at a time.
+    def random(variable_count, max_degree):
+        """ Generates and returns a random AST, having `variable_count` distinct variables, such that no node in it has more than `max_degree` children.
+        The construction goes bottom-top, starting with the (initial) leaves, and it builds one level at a time.
         If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) // 2` nodes.
         This way, it is guaranteed that each node on the previous level will have a parent.
-        After assigning the parents for the previous level, it fills the remaining edges with clones of random existing nodes.
+        After assigning the parents for the previous level, it fills the remaining edges with clones of random existing nodes having opposite operators.
         """
 
-        levels = [[Tree('?', chr(ord('a') + i) if i < 26 else 'x' + str(i - 25)) for i in range(leaf_count)]]
-        nodes = [*levels[0]]
-
+        levels = [[Tree('?', chr(ord('a') + i) if i < 26 else 'x' + str(i - 25)) for i in range(variable_count)]]
         while len(levels[-1]) > 1:
             level_size = (len(levels[-1]) + 1) // 2
             level_children = [[] for _ in range(level_size)]
@@ -158,16 +155,21 @@ class Tree:
                 index = random.choice([index for index in range(level_size) if len(level_children[index]) < max_degree])
                 level_children[index] += [node]
 
+            level_operator = random.choice(list(set('*+') - {levels[-1][0].gate}))
+            available_nodes = sum(levels[-1:0:-2], []) + levels[0]
+
             levels += [[]]
             for index in range(level_size):
-                available_children = list(set(nodes) - set(level_children[index]))
+                available_children = list(set(available_nodes) - set(level_children[index]))
                 available_max_degree = min(max_degree - len(level_children[index]), len(available_children))
                 new_children_count = 0 if available_max_degree == 0 else random.randint(1, available_max_degree)
                 level_children[index] += random.sample(available_children, new_children_count)
                 children = [child if child.parent is None else child.clone() for child in level_children[index]]
-                levels[-1] += [Tree(random.choice('*+'), children)]
-            nodes += levels[-1]
+                levels[-1] += [Tree(level_operator, children)]
 
-        tree = nodes[-1]
+        def compute_max_degree(node):
+            return max([len(node.children)] + [compute_max_degree(child) for child in node.children])
+
+        tree = levels[-1][0]
         tree.trim()
-        return tree
+        return tree if compute_max_degree(tree) <= max_degree else Tree.random(variable_count, max_degree)

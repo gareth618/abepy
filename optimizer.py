@@ -37,7 +37,7 @@ def absorb(node):
     children_parent = list(set(parent.children) - {node})
     parent.reset(parent.gate, children_parent)
 
-def increase_cost(tree):
+def decrease_cost(tree):
     lists = find_factorizable_lists(tree)
     nodes = find_absorbable_nodes(tree)
     if not lists and not nodes:

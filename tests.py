@@ -33,14 +33,6 @@ class TestTree(unittest.TestCase):
         self.assertEqual(Tree.parse('(a+b)+(b+c)').formula, '(a+b+c)')
         self.assertEqual(Tree.parse('(a+b)*(a+b)+a+(b+b)+(((c)))').formula, '(a+b+c)')
 
-    def test_trim_invariants(self):
-        for _ in range(10):
-            leaf_count = random.randint(1, 100)
-            max_degree = random.randint(2, 25)
-            tree = Tree.random(leaf_count, max_degree)
-            tree.trim()
-            self.assertTrue(TestTree.check_invariants(tree))
-
     def test_cost(self):
         self.assertEqual(Tree.parse('a').cost(), 1)
         self.assertEqual(Tree.parse('(ab+c)d+ad+c').cost(), 7)
@@ -52,12 +44,10 @@ class TestTree(unittest.TestCase):
         self.assertTrue(TestTree.validate_nodes(copy))
 
     def test_random(self):
-        for _ in range(10):
-            leaf_count = random.randint(1, 100)
-            max_degree = random.randint(2, 25)
-            tree = Tree.random(leaf_count, max_degree)
+        def test(tree):
             self.assertTrue(TestTree.validate_nodes(tree))
-            self.assertEqual(len(TestTree.collect_leaves(tree)), leaf_count)
+            self.assertTrue(TestTree.check_invariants(tree))
+        TestTree.for_random_tree(test, 10)
 
     @staticmethod
     def validate_nodes(node, parent=None):
@@ -65,19 +55,7 @@ class TestTree(unittest.TestCase):
             return False
         if node.parent != parent:
             return False
-        for child in node.children:
-            if not TestTree.validate_nodes(child, node):
-                return False
-        return True
-
-    @staticmethod
-    def collect_leaves(node):
-        if node.children:
-            leaves = set()
-            for child in node.children:
-                leaves |= TestTree.collect_leaves(child)
-            return leaves
-        return {node.formula}
+        return all(TestTree.validate_nodes(child, node) for child in node.children)
 
     @staticmethod
     def check_invariants(node):
@@ -90,6 +68,13 @@ class TestTree(unittest.TestCase):
             subformulas |= {child.formula}
         return len(subformulas) == len(node.children)
 
+    @staticmethod
+    def for_random_tree(callback, repeat):
+        for _ in range(repeat):
+            variable_count = random.randint(1, 100)
+            max_degree = random.randint(2, 25)
+            callback(Tree.random(variable_count, max_degree))
+
     def test_find_factorizable_lists(self):
         tree = Tree.parse('((a+b)*(a+c)*((x*y)+(x*z)+(x*t)))+(a*b*c)+((a+b)*((x*y)+(x*z)+(x*t)))')
         lists = optimizer.find_factorizable_lists(tree)
@@ -99,7 +84,7 @@ class TestTree(unittest.TestCase):
 
     def test_apply_factorization(self):
         tree = Tree.parse('(x*a*b)+(x*c)+d')
-        optimizer.increase_cost(tree)
+        optimizer.decrease_cost(tree)
         self.assertEqual(tree.formula, '((((a*b)+c)*x)+d)')
 
     def test_find_absorbable_nodes(self):
@@ -111,6 +96,16 @@ class TestTree(unittest.TestCase):
 
     def test_apply_absorption(self):
         tree = Tree.parse('(a*b*(b+c)*(b+d))+d')
-        optimizer.increase_cost(tree)
-        optimizer.increase_cost(tree)
+        optimizer.decrease_cost(tree)
+        optimizer.decrease_cost(tree)
         self.assertEqual(tree.formula, '((a*b)+d)')
+
+    def test_decrease_cost(self):
+        def test(tree):
+            cost1 = tree.cost()
+            optimizer.decrease_cost(tree)
+            cost2 = tree.cost()
+            self.assertTrue(TestTree.validate_nodes(tree))
+            self.assertTrue(TestTree.check_invariants(tree))
+            self.assertLessEqual(cost2, cost1)
+        TestTree.for_random_tree(test, 10)
