@@ -76,7 +76,7 @@ class TestTree(unittest.TestCase):
         return len(subformulas) == len(node.children)
 
     @staticmethod
-    def for_random_tree(callback, repeat):
+    def for_random_tree(callback, repeat=10):
         for _ in range(repeat):
             variable_count = random.randint(1, 100)
             max_degree = random.randint(2, 25)
@@ -134,7 +134,7 @@ class TestTree(unittest.TestCase):
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
             self.assertLessEqual(new_cost, old_cost)
-        TestTree.for_random_tree(test, 10)
+        TestTree.for_random_tree(test)
 
     def test_increase_cost_v1(self):
         def test(tree):
@@ -149,21 +149,33 @@ class TestTree(unittest.TestCase):
             tree.trim()
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
-        TestTree.for_random_tree(test, 10)
+        TestTree.for_random_tree(test)
 
     def test_increase_cost_v2(self):
         def test(tree):
             operations.increase_cost(tree)
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
-        TestTree.for_random_tree(test, 10)
+        TestTree.for_random_tree(test)
 
     def test_heuristics(self):
-        def test(tree):
-            for heuristic in [heuristics.hill_climbing, heuristics.simulated_annealing, heuristics.custom_heuristic]:
-                copy = tree.clone()
-                heuristic(copy)
-                self.assertTrue(TestTree.validate_nodes(copy))
-                self.assertTrue(TestTree.check_invariants(copy))
-                self.assertTrue(Tree.probably_equivalent(copy, tree, 1000))
-        TestTree.for_random_tree(test, 1)
+        variable_count = random.randint(20, 30)
+        max_degree = random.randint(5, 10)
+        tree = Tree.random(variable_count, max_degree)
+        algorithms = [
+            heuristics.naive,
+            heuristics.hill_climbing,
+            heuristics.simulated_annealing,
+            heuristics.custom_heuristic
+        ]
+        for algorithm in algorithms:
+            copy = tree.clone()
+            algorithm(copy)
+            self.assertTrue(TestTree.validate_nodes(copy))
+            self.assertTrue(TestTree.check_invariants(copy))
+            self.assertTrue(Tree.probably_equivalent(copy, tree))
+            copy = tree.clone()
+            heuristics.iterate(copy, algorithm, 3)
+            self.assertTrue(TestTree.validate_nodes(copy))
+            self.assertTrue(TestTree.check_invariants(copy))
+            self.assertTrue(Tree.probably_equivalent(copy, tree))

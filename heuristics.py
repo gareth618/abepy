@@ -2,6 +2,10 @@ import math
 import random
 import operations
 
+def naive(tree):
+    while operations.decrease_cost(tree):
+        pass
+
 def hill_climbing(tree, neighbors=5):
     while True:
         best_cost = 1e9
@@ -43,3 +47,15 @@ def custom_heuristic(tree, steps=200):
             can_factorize = False
     while operations.decrease_cost(tree):
         pass
+
+def iterate(tree, heuristic, iterations=10):
+    best_cost = 1e9
+    best_tree = None
+    for _ in range(iterations):
+        copy = tree.clone()
+        heuristic(copy)
+        cost = copy.cost()
+        if cost < best_cost:
+            best_cost = cost
+            best_tree = copy
+    tree.reset(best_tree.gate, best_tree.children)
