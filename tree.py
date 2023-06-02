@@ -18,6 +18,7 @@ class Tree:
         """ Converts the tree to a string such that each line contains the formula of a single node.
         The formula is preceded by one `|` sign for each level of indentation.
         """
+
         str_self = self.gate + ' ' + self.formula
         if not self.children:
             return str_self
@@ -30,6 +31,7 @@ class Tree:
         Otherwise, `arg` is the new list of children for the node.
         When updating children, the formula is updated too, as well as the parents of the children.
         """
+
         self.gate = gate
         if gate == '?':
             literal = arg
@@ -83,13 +85,6 @@ class Tree:
         if self.gate == '?':
             return Tree(self.gate, self.formula)
         return Tree(self.gate, [child.clone() for child in self.children])
-
-    def evaluate(self, assignment):
-        if self.gate == '*':
-            return all(child.evaluate(assignment) for child in self.children)
-        if self.gate == '+':
-            return any(child.evaluate(assignment) for child in self.children)
-        return assignment[self.formula]
 
     @staticmethod
     def parse(string):
@@ -182,3 +177,26 @@ class Tree:
         tree = levels[-1][0]
         tree.trim()
         return tree if compute_max_degree(tree) <= max_degree else Tree.random(variable_count, max_degree)
+
+    @staticmethod
+    def probably_equivalent(tree1, tree2, repeat):
+        """ Runs `repeat` iterations in order to check if the formulas represented by `tree1` and `tree2` are equivalent.
+        At each iteration, the function randomly assigns truth values to every variable involved and checks the equality of the results.
+        """
+
+        for _ in range(repeat):
+            assignment = dict()
+
+            def evaluate(node):
+                nonlocal assignment
+                if node.gate == '*':
+                    return all(evaluate(child) for child in node.children)
+                if node.gate == '+':
+                    return any(evaluate(child) for child in node.children)
+                if node.formula not in assignment:
+                    assignment[node.formula] = random.random() < .5
+                return assignment[node.formula]
+
+            if evaluate(tree1) != evaluate(tree2):
+                return False
+        return True

@@ -9,12 +9,10 @@ metadata = [
 
 for name, min_variable_count, max_variable_count, min_max_degree, max_max_degree, min_cost, max_cost, formula_count in metadata:
     formulas = []
-    while True:
+    while len(formulas) < formula_count:
         tree = Tree.random(random.randint(min_variable_count, max_variable_count), random.randint(min_max_degree, max_max_degree))
         if min_cost <= tree.cost() <= max_cost:
             formulas += [tree.formula]
-            if len(formulas) == formula_count:
-                break
     with open(f'inputs/{name}.txt', 'w') as fd:
         for formula in formulas:
             fd.write(formula + '\n')
