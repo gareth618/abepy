@@ -179,12 +179,12 @@ class Tree:
         return tree if compute_max_degree(tree) <= max_degree else Tree.random(variable_count, max_degree)
 
     @staticmethod
-    def probably_equivalent(tree1, tree2, repeat):
-        """ Runs `repeat` iterations in order to check if the formulas represented by `tree1` and `tree2` are equivalent.
+    def probably_equivalent(tree1, tree2, iterations):
+        """ Runs the given number of iterations in order to check if the formulas represented by `tree1` and `tree2` are equivalent.
         At each iteration, the function randomly assigns truth values to every variable involved and checks the equality of the results.
         """
 
-        for _ in range(repeat):
+        for _ in range(iterations):
             assignment = dict()
 
             def evaluate(node):

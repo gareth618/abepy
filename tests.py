@@ -2,6 +2,7 @@ import re
 import random
 import unittest
 import operations
+import heuristics
 from tree import Tree
 
 class TestTree(unittest.TestCase):
@@ -36,6 +37,9 @@ class TestTree(unittest.TestCase):
 
     def test_cost(self):
         self.assertEqual(Tree.parse('a').cost(), 1)
+        self.assertEqual(Tree.parse('a1').cost(), 1)
+        self.assertEqual(Tree.parse('a12').cost(), 1)
+        self.assertEqual(Tree.parse('abc').cost(), 3)
         self.assertEqual(Tree.parse('(ab+c)d+ad+c').cost(), 7)
 
     def test_clone(self):
@@ -124,24 +128,24 @@ class TestTree(unittest.TestCase):
 
     def test_decrease_cost(self):
         def test(tree):
-            cost1 = tree.cost()
+            old_cost = tree.cost()
             operations.decrease_cost(tree)
-            cost2 = tree.cost()
+            new_cost = tree.cost()
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
-            self.assertLessEqual(cost2, cost1)
+            self.assertLessEqual(new_cost, old_cost)
         TestTree.for_random_tree(test, 10)
 
     def test_increase_cost_v1(self):
         def test(tree):
-            cost1 = tree.cost()
+            old_cost = tree.cost()
             nodes = operations.find_distributable_nodes(tree)
             if nodes:
                 node = random.choice(nodes)
                 sibling = random.choice(list(set(node.parent.children) - {node}))
                 operations.distribute(sibling, node)
-            cost2 = tree.cost()
-            self.assertGreaterEqual(cost2, cost1)
+            new_cost = tree.cost()
+            self.assertGreaterEqual(new_cost, old_cost)
             tree.trim()
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
@@ -153,3 +157,13 @@ class TestTree(unittest.TestCase):
             self.assertTrue(TestTree.validate_nodes(tree))
             self.assertTrue(TestTree.check_invariants(tree))
         TestTree.for_random_tree(test, 10)
+
+    def test_heuristics(self):
+        def test(tree):
+            for heuristic in [heuristics.hill_climbing, heuristics.simulated_annealing, heuristics.custom_heuristic]:
+                copy = tree.clone()
+                heuristic(copy)
+                self.assertTrue(TestTree.validate_nodes(copy))
+                self.assertTrue(TestTree.check_invariants(copy))
+                self.assertTrue(Tree.probably_equivalent(copy, tree, 1000))
+        TestTree.for_random_tree(test, 1)

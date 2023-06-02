@@ -20,28 +20,33 @@ def run(dirname, heuristic):
 
             formulas = [line for line in open(entry).read().split('\n') if line != '']
             for formula in formulas:
-                tree1 = Tree.parse(formula)
-                cost1 = tree1.cost()
-                time1 = time.time()
-                tree2 = heuristics.custom(tree1)
-                time2 = time.time()
-                cost2 = tree2.cost()
+                tree = Tree.parse(formula)
+                old_tree = tree.clone()
+                old_cost = tree.cost()
+                old_time = time.time()
+                heuristic(tree)
+                new_time = time.time()
+                new_tree = tree.clone()
+                new_cost = tree.cost()
 
-                improvement = (cost1 - cost2) / cost1 * 100
-                runningtime = time2 - time1
+                improvement = (old_cost - new_cost) / old_cost * 100
+                runningtime = new_time - old_time
                 avg_improvement += improvement
-                max_improvement = max(max_improvement, (improvement, tree2.formula))
+                max_improvement = max(max_improvement, (improvement, new_tree.formula))
                 avg_runningtime += runningtime
 
-                assert Tree.probably_equivalent(tree1, tree2, 10000)
+                assert Tree.probably_equivalent(old_tree, new_tree, 1000)
                 fd.write(max_improvement[1] + '\n')
 
             avg_improvement /= len(formulas)
             avg_runningtime /= len(formulas)
 
-            print(name)
-            print(f'  avg: {"{:.2f}".format(avg_improvement)}%')
-            print(f'  max: {"{:.2f}".format(max_improvement[0])}%')
-            print(f'  time: {"{:.2f}".format(avg_runningtime)}s')
+            print(f'[{heuristic.__name__}]', name)
+            print(f'avg_cost: {"{:.2f}".format(avg_improvement)}%')
+            print(f'max_cost: {"{:.2f}".format(max_improvement[0])}%')
+            print(f'avg_time: {"{:.2f}".format(avg_runningtime)}s')
+    print()
 
-run('inputs', heuristics.custom)
+run('inputs', heuristics.hill_climbing)
+run('inputs', heuristics.simulated_annealing)
+run('inputs', heuristics.custom_heuristic)
