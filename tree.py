@@ -47,6 +47,10 @@ class Tree:
         if self.parent is not None:
             self.parent.reset(self.parent.gate, [*self.parent.children])
 
+    def assign(self, node):
+        """ Resets the contents of the node to those of `node`, except for the parent. """
+        self.reset(node.gate, node.formula if node.gate == '?' else node.children)
+
     def trim(self):
         """ Simplifies the tree by getting rid of the following three structural flaws:
         1. nodes with only one child `((a*b)) -> (a*b)`
@@ -74,7 +78,7 @@ class Tree:
         self.reset(self.gate, self.formula if self.gate == '?' else new_children)
         if len(self.children) == 1:
             child = self.children[0]
-            self.reset(child.gate, child.formula if child.gate == '?' else child.children)
+            self.assign(child)
 
     def cost(self):
         """ Returns the number of literals in the formula. """
@@ -146,7 +150,7 @@ class Tree:
     def random(variable_count, max_degree):
         """ Generates and returns a random AST, having `variable_count` distinct variables, such that no node in it has more than `max_degree` children.
         The construction goes bottom-top, starting with the (initial) leaves, and it builds one level at a time.
-        If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) // 2` nodes.
+        If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) / 2` nodes.
         This way, it is guaranteed that each node on the previous level will have a parent.
         After assigning the parents for the previous level, it fills the remaining edges with clones of random existing nodes having opposite operators.
         """
