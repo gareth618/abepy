@@ -1,6 +1,7 @@
 import os
 import time
 import shutil
+import inspect
 import heuristics
 import questionary
 from tree import Tree
@@ -70,12 +71,7 @@ subdirnames = [entry.name for entry in os.scandir(path) if entry.is_dir()]
 subdirname = questionary.select('Choose dataset directory', subdirnames).ask()
 path /= subdirname
 
-options = {
-    'naive': heuristics.naive,
-    'hill_climbing': heuristics.hill_climbing,
-    'simulated_annealing': heuristics.simulated_annealing,
-    'custom_heuristic': heuristics.custom_heuristic,
-}
+options = {function[0]: function[1] for function in inspect.getmembers(heuristics, inspect.isfunction) if function[0] != 'iterate'}
 checked = questionary.checkbox('Select heuristics to be run', list(options.keys())).ask()
 chosen_heuristics = [options[name] for name in checked]
 

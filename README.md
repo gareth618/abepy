@@ -27,7 +27,7 @@ The CLI will ask you for the name of the file you want to create and in which da
 
 ## 🧪 Testing the heuristics
 
-You can easily find in code the parameters that can be adjusted (they are always default function arguments). Also, you can define your own heuristic in `heuristics.py` and add it to the `options` dictionary in `main.py`.
+You can easily find in code the parameters that can be adjusted (they are always default function arguments). Also, you can add your own heuristic by just defining it in `heuristics.py`.
 
 ```sh
 python main.py
