@@ -9,7 +9,7 @@ from rich.table import Table
 from rich.console import Console
 from rich.progress import Progress
 
-def run(dataset_path, heuristic, iterations=10):
+def run(dataset_path, heuristic, iterations=5):
     global rows
     with Progress() as progress:
         filenames = [entry.name for entry in os.scandir(dataset_path) if entry.is_file() and os.path.splitext(entry.name)[1] == '.txt']
@@ -56,6 +56,7 @@ def run(dataset_path, heuristic, iterations=10):
                 total_max_improvement /= len(formulas)
                 total_avg_runningtime /= len(formulas)
 
+                progress.update(task, advance=100)
                 rows += [(
                     filename[0:-4],
                     heuristic.__name__,

@@ -15,11 +15,11 @@ path /= subdirname
 
 filename = questionary.text('Enter filename', 'formulas', validate=lambda val: val != '').ask()
 min_variable_count = int(questionary.text('Enter min_variable_count', '10', validate=lambda val: val.isdecimal() and int(val) >= 1).ask())
-max_variable_count = int(questionary.text('Enter max_variable_count', '20', validate=lambda val: val.isdecimal() and int(val) >= min_variable_count).ask())
+max_variable_count = int(questionary.text('Enter max_variable_count', str(min_variable_count), validate=lambda val: val.isdecimal() and int(val) >= min_variable_count).ask())
 min_max_degree = int(questionary.text('Enter min_max_degree', '2', validate=lambda val: val.isdecimal() and int(val) >= 2).ask())
-max_max_degree = int(questionary.text('Enter max_max_degree', '5', validate=lambda val: val.isdecimal() and int(val) >= min_max_degree).ask())
+max_max_degree = int(questionary.text('Enter max_max_degree', str(min_max_degree), validate=lambda val: val.isdecimal() and int(val) >= min_max_degree).ask())
 min_cost = int(questionary.text('Enter min_cost', '10', validate=lambda val: val.isdecimal() and int(val) >= 1).ask())
-max_cost = int(questionary.text('Enter max_cost', '50', validate=lambda val: val.isdecimal() and int(val) >= min_cost).ask())
+max_cost = int(questionary.text('Enter max_cost', str(min_cost), validate=lambda val: val.isdecimal() and int(val) >= min_cost).ask())
 formula_count = int(questionary.text('Enter formula_count', '25', validate=lambda val: val.isdecimal() and int(val) >= 1).ask())
 
 formulas = []

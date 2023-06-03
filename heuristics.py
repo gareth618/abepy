@@ -7,7 +7,7 @@ def naive(tree):
     while operations.decrease_cost(tree):
         pass
 
-def hill_climbing(tree, neighbors=5):
+def hill_climbing(tree, neighbors=10):
     """ Performs Hill Climbing on `tree`.
     The neighbors of the current state are obtained by randomly applying `neighbors` factorizations and absorptions on `tree`.
     """
@@ -23,7 +23,7 @@ def hill_climbing(tree, neighbors=5):
                 best_tree = copy
         tree.assign(best_tree)
 
-def simulated_annealing(tree, t_min=10, t_max=200, cooling_rate=.15, increase_prob=.3, steps=15):
+def simulated_annealing(tree, t_min=.1, t_max=1, cooling_rate=.05, increase_prob=.2, steps=10):
     """ Performs Simulated Annealing on `tree`. """
     t = t_max
     while t > t_min:
@@ -35,18 +35,18 @@ def simulated_annealing(tree, t_min=10, t_max=200, cooling_rate=.15, increase_pr
             else:
                 operations.decrease_cost(copy)
             new_cost = copy.cost()
-            delta = new_cost - old_cost
+            delta = (new_cost - old_cost) / old_cost
             if delta < 0 or random.random() < math.exp(-delta / t):
                 tree.assign(copy)
-        t = (1 - cooling_rate) * t
+        t /= 1 + cooling_rate * t
     while operations.decrease_cost(tree):
         pass
 
-def custom_heuristic(tree, steps=200):
+def custom_heuristic(tree, alpha=5, steps=150):
     """ Performs our Custom Heuristic algorithm on `tree`. """
     can_factorize = True
     for step in range(steps):
-        if not can_factorize or random.randrange(5 * steps) < steps - step:
+        if not can_factorize or random.randrange(alpha * steps) < steps - step:
             operations.increase_cost(tree)
             can_factorize = True
         elif not operations.decrease_cost(tree):
