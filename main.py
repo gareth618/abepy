@@ -81,7 +81,7 @@ if results_path.exists():
 
 table = Table(title=f'Score and Time Analysis on Dataset [yellow]{subdirname}[/yellow]', header_style='bold green')
 table.add_column('Filename', justify='center')
-table.add_column('Algorithm', justify='left')
+table.add_column('Heuristic', justify='left')
 table.add_column('Average Score (%)', justify='right')
 table.add_column('Maximum Score (%)', justify='right')
 table.add_column('Average Running Time (s)', justify='right')
