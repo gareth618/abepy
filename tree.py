@@ -150,7 +150,7 @@ class Tree:
     def random(variable_count, max_degree):
         """ Generates and returns a random AST, having `variable_count` distinct variables, such that no node in it has more than `max_degree` children.
         The construction goes bottom-top, starting with the (initial) leaves, and it builds one level at a time.
-        If the previous level has `n` nodes, then the current level (the one above it) will have `(n + 1) / 2` nodes.
+        If the previous level has `n` nodes, then the current level (the one above it) will have `ceil(n / 2)` nodes.
         This way, it is guaranteed that each node on the previous level will have a parent.
         After assigning the parents for the previous level, it fills the remaining edges with clones of random existing nodes having opposite operators.
         """
